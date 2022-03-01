@@ -61,18 +61,17 @@ app.get('/stream/:n', async (req, res) => {
         });
     }
 
-    let opened = false;
     const transform = new Transform({
         writableObjectMode: true,
-        // construct(callback) {
-        //     this.push('[');
-        //     callback();
-        // },
+        construct(callback) {
+            this.push('[');
+            this.comma = false;
+            callback();
+        },
         transform(data, encoding, callback) {
-            const chunk = JSON.stringify(data);
-            const prefix = opened ? ',' : '[';
-            if (!opened) opened = true;
-            this.push(`${prefix}${chunk}`);
+            if (this.comma) this.push(',');
+            else this.comma = true;
+            this.push(JSON.stringify(data));
             callback();
         },
         final(callback) {
@@ -80,7 +79,7 @@ app.get('/stream/:n', async (req, res) => {
             callback();
         }
     });
-    dbStream.pipe(transform).pipe(res);
+    dbStream.pipe(transform).pipe(res).on('error', (err) => console.log(`PIPE ERROR: ${JSON.stringify(err)}`));;
 
     // dbStream.pipe(JSONStream.stringify('[',',',']',0)).pipe(res);
     // const jsonStream = dbStream.pipe(JSONStream.stringify());

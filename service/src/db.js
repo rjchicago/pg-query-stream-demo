@@ -30,8 +30,15 @@ const generateSeries = async (n) => {
 }
 
 const streamSeries = async (n=10000, batchSize=1000, highWaterMark=10000) => {
-    const sql = `SELECT * FROM streamy limit ${n}`;
-    const dbStream = knex.raw(sql).stream({batchSize, highWaterMark});
+    // const sql = `SELECT num/(num-10) AS test FROM streamy WHERE num <= ${n}`;
+    const sql = `SELECT * FROM streamy ORDER BY num LIMIT ${n}`;
+    const dbStream = knex.raw(sql)
+        .stream({batchSize, highWaterMark});
+    dbStream.on('error', (error) => {
+        console.log(error);
+        dbStream.push({error: error.message, code: error.code});
+        dbStream.end();
+    });
     return dbStream;
 }
 
