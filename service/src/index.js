@@ -50,7 +50,7 @@ app.get('/stream/:n', async (req, res) => {
     const n = Number(req.params.n || 10);
     const batchSize = Number(req.query.batchSize || 1000);
     const highWaterMark = Number(req.query.highWaterMark || 10000);    
-    const dbStream = await db.streamSeries2(n, batchSize, highWaterMark);
+    const dbStream = await db.streamSeries(n, batchSize, highWaterMark);
     dbStream.on('error', (error) => {console.log(error)});
     
     if (!res.headersSent) {
@@ -61,24 +61,33 @@ app.get('/stream/:n', async (req, res) => {
         });
     }
 
-    // let opened = false;
-    // const transform = new Transform({
-    //     transform(data, encoding, next) {
-    //         console.log(JSON.stringify(data));
-    //         const prefix = opened ? '' : '[';
-    //         const suffix = (data === null || data.done) ? ']' : ',';
-    //         const json = `${prefix}${data ? data.slice(0,1).slice(0,-1) : ''}${suffix}`;
-    //         console.log(`Transform: ${json.length} bytes`);
-    //         opened = true;
-    //         next(null, json);
-    //     },
-    // });
-    
-    const jsonStream = dbStream.pipe(JSONStream.stringify());
-    jsonStream.pipe(res);
+    let opened = false;
+    const transform = new Transform({
+        writableObjectMode: true,
+        // construct(callback) {
+        //     this.push('[');
+        //     callback();
+        // },
+        transform(data, encoding, callback) {
+            const chunk = JSON.stringify(data);
+            const prefix = opened ? ',' : '[';
+            if (!opened) opened = true;
+            this.push(`${prefix}${chunk}`);
+            callback();
+        },
+        final(callback) {
+            this.push(']');
+            callback();
+        }
+    });
+    dbStream.pipe(transform).pipe(res);
+
+    // dbStream.pipe(JSONStream.stringify('[',',',']',0)).pipe(res);
+    // const jsonStream = dbStream.pipe(JSONStream.stringify());
+    // jsonStream.pipe(res);
     req.on('close', () => {
         if (!dbStream.destroyed) dbStream.end();
-        if (!jsonStream.destroyed) jsonStream.end();
+        // if (!jsonStream.destroyed) jsonStream.end();
     });
 });
 
