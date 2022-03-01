@@ -31,9 +31,8 @@ const generateSeries = async (n) => {
 
 const streamSeries = async (n=10000, batchSize=1000, highWaterMark=10000) => {
     // const sql = `SELECT num/(num-10) AS test FROM streamy WHERE num <= ${n}`;
-    const sql = `SELECT * FROM streamy ORDER BY num LIMIT ${n}`;
-    const dbStream = knex.raw(sql)
-        .stream({batchSize, highWaterMark});
+    const sql = `SELECT num FROM streamy ORDER BY num LIMIT ${n}`;
+    const dbStream = knex.raw(sql).stream({batchSize, highWaterMark});
     dbStream.on('error', (error) => {
         console.log(error);
         dbStream.push({error: error.message, code: error.code});
@@ -52,9 +51,15 @@ const streamSeries2 = async (n, batchSize=1000, highWaterMark=10000) => {
     client.on('notification', () => console.log('pgClient notification'));
     client.on('end', () => console.log('pgClient end'));
 
-    const sql = `SELECT * FROM streamy limit ${n}`;
+    // const sql = `SELECT num/(num-10) AS test FROM streamy WHERE num <= ${n}`;
+    const sql = `SELECT * FROM streamy ORDER BY num LIMIT ${n}`;
     const queryStream = new QueryStream(sql, [], {batchSize, highWaterMark});
     const dbStream = client.query(queryStream);
+    // dbStream.on('error', (error) => {
+    //     console.log(error);
+    //     dbStream.push({error: error.message, code: error.code});
+    //     dbStream.end();
+    // });
 
     // dbStream.on('close', () => console.log('dbStream close'));
     // dbStream.on('disconnect', () => console.log('dbStream disconnect'));

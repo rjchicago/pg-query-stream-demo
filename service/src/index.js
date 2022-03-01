@@ -79,7 +79,7 @@ app.get('/stream/:n', async (req, res) => {
             callback();
         }
     });
-    dbStream.pipe(transform).pipe(res).on('error', (err) => console.log(`PIPE ERROR: ${JSON.stringify(err)}`));;
+    dbStream.pipe(transform).pipe(res).on('error', (err) => console.log(`PIPE ERROR: ${JSON.stringify(err)}`));
 
     // dbStream.pipe(JSONStream.stringify('[',',',']',0)).pipe(res);
     // const jsonStream = dbStream.pipe(JSONStream.stringify());
