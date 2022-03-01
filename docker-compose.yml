@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  test:
+    image: rjchicago/pg-query-stream-demo:${VERSION:-latest}
+    container_name: pg-query-stream-demo
+    build: 
+      context: ./service
+    command: "npm run debug"
+    volumes:
+      - ./service/package.json:/usr/app/package.json
+      - ./service/src:/usr/app/src
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+
+volumes:
+  postgres_data:
