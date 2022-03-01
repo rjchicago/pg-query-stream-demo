@@ -4,7 +4,6 @@ const http = require('http');
 const express = require('express');
 const db = require('./db');
 const { Transform } = require('stream');
-const JSONStream = require('JSONStream');
 
 const app = express();
 const port = 3000;
@@ -81,12 +80,8 @@ app.get('/stream/:n', async (req, res) => {
     });
     dbStream.pipe(transform).pipe(res).on('error', (err) => console.log(`PIPE ERROR: ${JSON.stringify(err)}`));
 
-    // dbStream.pipe(JSONStream.stringify('[',',',']',0)).pipe(res);
-    // const jsonStream = dbStream.pipe(JSONStream.stringify());
-    // jsonStream.pipe(res);
     req.on('close', () => {
         if (!dbStream.destroyed) dbStream.end();
-        // if (!jsonStream.destroyed) jsonStream.end();
     });
 });
 
