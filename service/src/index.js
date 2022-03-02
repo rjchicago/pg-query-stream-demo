@@ -50,7 +50,6 @@ app.get('/stream/:n', async (req, res) => {
     const batchSize = Number(req.query.batchSize || 1000);
     const highWaterMark = Number(req.query.highWaterMark || 10000);    
     const dbStream = await db.streamSeries(n, batchSize, highWaterMark);
-    dbStream.on('error', (error) => {console.log(error)});
     
     if (!res.headersSent) {
         res.writeHead(200, {
@@ -76,7 +75,10 @@ app.get('/stream/:n', async (req, res) => {
             callback();
         }
     });
-    dbStream.pipe(transform).pipe(res).on('error', (err) => console.log(`PIPE ERROR: ${JSON.stringify(err)}`));
+    
+    dbStream.pipe(transform).pipe(res).on('error', (err) => {
+        console.error(`PIPE ERROR: ${JSON.stringify(err)}`);
+    });
 
     req.on('close', () => {
         if (!dbStream.destroyed) dbStream.end();
