@@ -7,10 +7,24 @@ The purpose of this `pg-query-stream` demo is to stream data from Postgres via R
 `Transform` example converts object-stream to json-stream...
 
 ``` js
-const sql = `SELECT num FROM streamy ORDER BY num LIMIT 10`;
-const dbStream = knex.raw(sql).stream({batchSize, highWaterMark});
+const connection = {
+    host: 'postgres',
+    port: 5432,
+    user: 'postgres',
+    password: 'test',
+    database: 'postgres'
+};
+
+const QueryStream = require('pg-query-stream')
+const knex = require('knex')({
+    client: 'pg',
+    acquireConnectionTimeout: 500,
+    connection
+});
+
+const sql = `SELECT num FROM streamy ORDER BY num LIMIT 100`;
+const dbStream = knex.raw(sql).stream({batchSize: 1, highWaterMark: 1000});
 dbStream.on('error', (error) => {
-    console.log(error);
     dbStream.push({error: error.message, code: error.code});
     dbStream.end();
 });
@@ -34,7 +48,7 @@ const transform = new Transform({
     }
 });
 
-dbStream.pipe(transform).pipe(res);
+dbStream.pipe(transform).pipe(process.stdout);
 ```
 
 ## usage

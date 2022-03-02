@@ -1,4 +1,3 @@
-// const knex = require('knex');
 const pg = require('pg')
 const QueryStream = require('pg-query-stream')
 
@@ -9,7 +8,6 @@ const connection = {
     password: 'test',
     database: 'postgres'
 };
-
 
 const knex = require('knex')({
     client: 'pg',
