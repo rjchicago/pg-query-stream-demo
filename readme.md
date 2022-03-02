@@ -33,13 +33,11 @@ const transform = new Transform({
     writableObjectMode: true,
     construct(callback) {
         this.push('[');
-        this.comma = false;
         callback();
     },
     transform(data, encoding, callback) {
-        if (this.comma) this.push(',');
-        else this.comma = true;
-        this.push(JSON.stringify(data));
+        this.push(`${this.comma || ''}${JSON.stringify(data)}`);
+        if (!this.comma) this.comma = ',';
         callback();
     },
     final(callback) {
