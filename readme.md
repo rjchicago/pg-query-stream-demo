@@ -69,8 +69,8 @@ time curl -s "http://localhost:3000/stream/1000000?batchSize=5000&highWaterMark=
 
 ## links & resources
 
-<https://nodejs.org/api/stream.html#stream>
-<https://knexjs.org/#Interfaces-Streams>
-<https://www.npmjs.com/package/pg-query-stream>
-<https://thenewstack.io/node-js-readable-streams-explained/>
-<https://blog.logrocket.com/working-node-js-streams/>
+* <https://nodejs.org/api/stream.html#stream>
+* <https://knexjs.org/#Interfaces-Streams>
+* <https://www.npmjs.com/package/pg-query-stream>
+* <https://thenewstack.io/node-js-readable-streams-explained/>
+* <https://blog.logrocket.com/working-node-js-streams/>
