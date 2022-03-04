@@ -56,13 +56,13 @@ dbStream.pipe(transform).pipe(process.stdout);
 docker-compose up
 
 # curl 10 records with batchSize 10
-curl -s "http://localhost:3000/stream/10?batchSize=10"
+curl -s "http://localhost:3000/full-stream/10?batchSize=10"
 
 # curl 1000 records with batchSize 100
-curl -s "http://localhost:3000/stream/1000?batchSize=100"
+curl -s "http://localhost:3000/full-stream/1000?batchSize=100"
 
 # time test example 1,000,000 records
-time curl -s "http://localhost:3000/stream/1000000?batchSize=5000&highWaterMark=50000" > /dev/null
+time curl -s "http://localhost:3000/full-stream/1000000?batchSize=5000&highWaterMark=50000" > /dev/null
 ```
 
 ## testing
@@ -76,24 +76,24 @@ while true; do clear; ls -lah temp; sleep 1; done
 
 # in another shell curl tests...
 # series tests
-curl -s -X GET "http://localhost:3000/series/1000" > ./temp/series-10000json
-curl -s -X GET "http://localhost:3000/series/10000" > ./temp/series-10000.json
-curl -s -X GET "http://localhost:3000/series/100000" > ./temp/series-100000.json
-curl -s -X GET "http://localhost:3000/series/1000000" > ./temp/series-1000000.json
-curl -s -X GET "http://localhost:3000/series/10000000" > ./temp/series-10000000.json
+curl -s -X GET "http://localhost:3000/half-stream/1000" > ./temp/half-stream-10000json
+curl -s -X GET "http://localhost:3000/half-stream/10000" > ./temp/half-stream-10000.json
+curl -s -X GET "http://localhost:3000/half-stream/100000" > ./temp/half-stream-100000.json
+curl -s -X GET "http://localhost:3000/half-stream/1000000" > ./temp/half-stream-1000000.json
+curl -s -X GET "http://localhost:3000/half-stream/10000000" > ./temp/half-stream-10000000.json
 # stream tests
-curl -s -X GET "http://localhost:3000/stream/1000" > ./temp/stream-10000json
-curl -s -X GET "http://localhost:3000/stream/10000" > ./temp/stream-10000.json
-curl -s -X GET "http://localhost:3000/stream/100000" > ./temp/stream-100000.json
-curl -s -X GET "http://localhost:3000/stream/1000000" > ./temp/stream-1000000.json
-curl -s -X GET "http://localhost:3000/stream/10000000" > ./temp/stream-10000000.json
+curl -s -X GET "http://localhost:3000/full-stream/1000" > ./temp/full-stream-10000json
+curl -s -X GET "http://localhost:3000/full-stream/10000" > ./temp/full-stream-10000.json
+curl -s -X GET "http://localhost:3000/full-stream/100000" > ./temp/full-stream-100000.json
+curl -s -X GET "http://localhost:3000/full-stream/1000000" > ./temp/full-stream-1000000.json
+curl -s -X GET "http://localhost:3000/full-stream/10000000" > ./temp/full-stream-10000000.json
 # w/ batchSize & highWaterMark overrides
-curl -s -X GET "http://localhost:3000/stream/1000000?batchSize=10000&highWaterMark=50000" > ./temp/stream-1000000.json
+curl -s -X GET "http://localhost:3000/full-stream/1000000?batchSize=10000&highWaterMark=50000" > ./temp/full-stream-1000000.json
 ```
 
 ## links & resources
 
-* <https://nodejs.org/api/stream.html#stream>
+* <https://nodejs.org/api/full-stream.html#stream>
 * <https://knexjs.org/#Interfaces-Streams>
 * <https://www.npmjs.com/package/pg-query-stream>
 * <https://thenewstack.io/node-js-readable-streams-explained/>

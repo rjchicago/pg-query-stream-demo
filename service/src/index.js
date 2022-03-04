@@ -44,16 +44,23 @@ app.get('/version', async (req, res) => {
     res.send(data);
 });
 
-doc('GET', 'series/10');
-app.get('/series/:n', async (req, res) => {
+doc('GET', 'raw/10');
+app.get('/raw/:n', async (req, res) => {
+    const n = Number(req.params.n) || 0;
+    const data = await db.getSeries(n);
+    res.send(data);
+});
+
+doc('GET', 'half-stream/10');
+app.get('/half-stream/:n', async (req, res) => {
     const n = Number(req.params.n) || 0;
     const data = await db.getSeries(n);
     writeStreamingHeaders(res);
     StreamingService.streamResponse(res, null, data);
 });
 
-doc('GET', 'stream/10');
-app.get('/stream/:n', async (req, res) => {
+doc('GET', 'full-stream/10');
+app.get('/full-stream/:n', async (req, res) => {
     const n = Number(req.params.n || 10);
     const batchSize = Number(req.query.batchSize || 1000);
     const highWaterMark = Number(req.query.highWaterMark || 10000);    
