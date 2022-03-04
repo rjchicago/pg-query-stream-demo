@@ -21,25 +21,19 @@ const getVersion = async () => {
     return result.rows[0].version;
 }
 
-const generateSeries = async (n) => {
-    const sql = `SELECT * FROM generate_series(1, ${n}) num`;
-    const result = await knex.raw(sql);
-    return result.rows;
+const getSeries = async (n=10000) => {
+    const sql = `SELECT * FROM streamy ORDER BY id LIMIT ${n}`;
+    const data = await knex.raw(sql);
+    return data.rows;
 }
 
 const streamSeries = async (n=10000, batchSize=1000, highWaterMark=10000) => {
-    // const sql = `SELECT num/(num-10) AS test FROM streamy WHERE num <= ${n}`;
-    const sql = `SELECT num FROM streamy ORDER BY num LIMIT ${n}`;
-    const dbStream = knex.raw(sql).stream({batchSize, highWaterMark});
-    dbStream.on('error', (error) => {
-        console.error(JSON.stringify({message: error.message, error}));
-        dbStream.push({error: error.message, code: error.code});
-        dbStream.end();
-    });
-    return dbStream;
+    // const sql = `SELECT id/(id-10) AS test FROM streamy WHERE id <= ${n}`;
+    const sql = `SELECT * FROM streamy ORDER BY id LIMIT ${n}`;
+    return knex.raw(sql).stream({batchSize, highWaterMark});
 }
 
-const streamSeries2 = async (n, batchSize=1000, highWaterMark=10000) => {
+const pgStreamSeries = async (n, batchSize=1000, highWaterMark=10000) => {
     const client = new pg.Client(connection);
     client.connect();
     
@@ -49,29 +43,15 @@ const streamSeries2 = async (n, batchSize=1000, highWaterMark=10000) => {
     client.on('notification', () => console.log('pgClient notification'));
     client.on('end', () => console.log('pgClient end'));
 
-    // const sql = `SELECT num/(num-10) AS test FROM streamy WHERE num <= ${n}`;
     const sql = `SELECT * FROM streamy ORDER BY num LIMIT ${n}`;
     const queryStream = new QueryStream(sql, [], {batchSize, highWaterMark});
     const dbStream = client.query(queryStream);
-    // dbStream.on('error', (error) => {
-    //     console.log(error);
-    //     dbStream.push({error: error.message, code: error.code});
-    //     dbStream.end();
-    // });
-
-    // dbStream.on('close', () => console.log('dbStream close'));
-    // dbStream.on('disconnect', () => console.log('dbStream disconnect'));
-    // dbStream.on('exit', () => console.log('dbStream exit'));
-    // dbStream.on('message', () => console.log('dbStream message'));
-    // dbStream.on('spawn', () => console.log('dbStream spawn'));
-    // dbStream.on('error', () => console.log('dbStream error'));
-
     return dbStream;
 }
 
 module.exports = {
     getVersion,
-    generateSeries,
+    getSeries,
     streamSeries,
-    streamSeries2
+    pgStreamSeries
 }

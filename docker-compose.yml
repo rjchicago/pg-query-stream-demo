@@ -1,8 +1,8 @@
 version: '3.8'
 services:
-  test:
+  demo:
     image: rjchicago/pg-query-stream-demo:${VERSION:-latest}
-    container_name: pg-query-stream-demo
+    container_name: demo
     build: 
       context: ./service
     command: "npm run debug"
@@ -15,6 +15,7 @@ services:
   postgres:
     image: postgres:13-alpine
     container_name: postgres
+    command: -cmax_wal_size=2GB
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test

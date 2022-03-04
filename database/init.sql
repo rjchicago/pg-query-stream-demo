@@ -1,5 +1,11 @@
 
-CREATE TABLE streamy(num INT PRIMARY KEY);
+CREATE TABLE streamy(
+    id INT PRIMARY KEY,
+    name TEXT
+);
 
 INSERT INTO streamy
-SELECT * FROM generate_series(1, 1000000) num;
+SELECT 
+    id as id,
+    'ROW-' || LPAD(id::text, 10, '0') as name
+FROM generate_series(1, 10000000) id;

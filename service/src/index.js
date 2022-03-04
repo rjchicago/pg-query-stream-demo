@@ -3,10 +3,21 @@ require('dotenv').config();
 const http = require('http');
 const express = require('express');
 const db = require('./db');
-const { Transform } = require('stream');
+const { Readable } = require('stream');
+const StreamingService = require('./StreamingService');
 
 const app = express();
 const port = 3000;
+
+const writeStreamingHeaders = (res) => {
+    if (!res.headersSent) {
+        res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Transfer-Encoding': 'chunked',
+            'X-Content-Type-Options': 'nosniff'
+        });
+    }
+};
 
 const endpoints = [];
 const doc = (method, endpoint) => {
@@ -36,12 +47,9 @@ app.get('/version', async (req, res) => {
 doc('GET', 'series/10');
 app.get('/series/:n', async (req, res) => {
     const n = Number(req.params.n) || 0;
-    const data = await db.generateSeries(n);
-    const contentType = typeof data === 'string'
-        ? 'text/plain'
-        : 'application/json'
-    res.setHeader('content-type', contentType);
-    res.send(data);
+    const data = await db.getSeries(n);
+    writeStreamingHeaders(res);
+    StreamingService.streamResponse(res, null, data);
 });
 
 doc('GET', 'stream/10');
@@ -50,39 +58,8 @@ app.get('/stream/:n', async (req, res) => {
     const batchSize = Number(req.query.batchSize || 1000);
     const highWaterMark = Number(req.query.highWaterMark || 10000);    
     const dbStream = await db.streamSeries(n, batchSize, highWaterMark);
-    
-    if (!res.headersSent) {
-        res.writeHead(200, {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Transfer-Encoding': 'chunked',
-            'X-Content-Type-Options': 'nosniff'
-        });
-    }
-
-    const transform = new Transform({
-        writableObjectMode: true,
-        construct(callback) {
-            this.push('[');
-            callback();
-        },
-        transform(data, encoding, callback) {
-            this.push(`${this.comma || ''}${JSON.stringify(data)}`);
-            if (!this.comma) this.comma = ',';
-            callback();
-        },
-        final(callback) {
-            this.push(']');
-            callback();
-        }
-    });
-    
-    dbStream.pipe(transform).pipe(res).on('error', (err) => {
-        console.error(`PIPE ERROR: ${JSON.stringify(err)}`);
-    });
-
-    req.on('close', () => {
-        if (!dbStream.destroyed) dbStream.end();
-    });
+    writeStreamingHeaders(res);
+    StreamingService.streamResponse(res, dbStream);
 });
 
 const server = http.createServer(app);
