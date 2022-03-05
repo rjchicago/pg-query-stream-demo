@@ -1,55 +1,14 @@
 # Demo POC using pg-query-stream
 
-The purpose of this `pg-query-stream` demo is to stream data from Postgres via REST API using transform & pipe, plus error handling.
+The purpose of this `pg-query-stream` demo is to enable 100% E2E streaming from Postgres to the HTTP client.
 
-## transform
+Check out my demo video of this project on Youtube:
 
-`Transform` example converts object-stream to json-stream...
-
-``` js
-const connection = {
-    host: 'postgres',
-    port: 5432,
-    user: 'postgres',
-    password: 'test',
-    database: 'postgres'
-};
-
-const QueryStream = require('pg-query-stream')
-const knex = require('knex')({
-    client: 'pg',
-    acquireConnectionTimeout: 500,
-    connection
-});
-
-const sql = `SELECT num FROM streamy ORDER BY num LIMIT 100`;
-const dbStream = knex.raw(sql).stream({batchSize: 1, highWaterMark: 1000});
-dbStream.on('error', (error) => {
-    dbStream.push({error: error.message, code: error.code});
-    dbStream.end();
-});
-
-const transform = new Transform({
-    writableObjectMode: true,
-    construct(callback) {
-        this.push('[');
-        callback();
-    },
-    transform(data, encoding, callback) {
-        this.push(`${this.comma || ''}${JSON.stringify(data)}`);
-        if (!this.comma) this.comma = ',';
-        callback();
-    },
-    final(callback) {
-        this.push(']');
-        callback();
-    }
-});
-
-dbStream.pipe(transform).pipe(process.stdout);
-```
+[![pg-query-stream demo](https://img.youtube.com/vi/1PzKldyuyWU/0.jpg)](https://www.youtube.com/watch?v=1PzKldyuyWU)
 
 ## usage
+
+Clone this repo, then...
 
 ``` sh
 # compose up
@@ -71,18 +30,20 @@ time curl -s "http://localhost:3000/full-stream/1000000?batchSize=5000&highWater
 # in one shell, monitor docker container stats
 docker stats demo
 
-# in one shell, monitor temp dir
+# in another shell, monitor temp dir
 while true; do clear; ls -lah temp; sleep 1; done
 
-# in another shell curl tests...
+# in a final shell curl tests...
+# raw test
+curl -s -X GET "http://localhost:3000/raw/10000000" > ./temp/raw-10000000.json
 # series tests
-curl -s -X GET "http://localhost:3000/half-stream/1000" > ./temp/half-stream-10000json
+curl -s -X GET "http://localhost:3000/half-stream/1000" > ./temp/half-stream-1000json
 curl -s -X GET "http://localhost:3000/half-stream/10000" > ./temp/half-stream-10000.json
 curl -s -X GET "http://localhost:3000/half-stream/100000" > ./temp/half-stream-100000.json
 curl -s -X GET "http://localhost:3000/half-stream/1000000" > ./temp/half-stream-1000000.json
 curl -s -X GET "http://localhost:3000/half-stream/10000000" > ./temp/half-stream-10000000.json
 # stream tests
-curl -s -X GET "http://localhost:3000/full-stream/1000" > ./temp/full-stream-10000json
+curl -s -X GET "http://localhost:3000/full-stream/1000" > ./temp/full-stream-1000json
 curl -s -X GET "http://localhost:3000/full-stream/10000" > ./temp/full-stream-10000.json
 curl -s -X GET "http://localhost:3000/full-stream/100000" > ./temp/full-stream-100000.json
 curl -s -X GET "http://localhost:3000/full-stream/1000000" > ./temp/full-stream-1000000.json
