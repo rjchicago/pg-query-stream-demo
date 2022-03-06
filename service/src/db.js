@@ -22,6 +22,7 @@ const getVersion = async () => {
 }
 
 const getSeries = async (n=10000) => {
+    // const sql = `SELECT id/(id-10) AS test FROM streamy WHERE id <= ${n}`;
     const sql = `SELECT * FROM streamy ORDER BY id LIMIT ${n}`;
     const data = await knex.raw(sql);
     return data.rows;
