@@ -83,7 +83,7 @@ app.get('/full-stream/:n', async (req, res) => {
         const dbStream = await db.streamSeries(n, batchSize, highWaterMark);
         StreamingService.streamResponse(res, dbStream);
         // Example Options Override:
-        // StreamingService.streamResponse(res, dbStream, null, {
+        // StreamingService.streamResponse(res, dbStream, {
         //     preHook: () => writeStreamingHeaders(res, 200),
         //     errorHook: () => writeStreamingHeaders(res, 500)
         // });

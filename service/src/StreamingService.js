@@ -1,6 +1,18 @@
 const { Transform, Readable, pipeline } = require('stream');
 
 class StreamingService {
+    static getOptions = (outStream, overrides={}) => {
+        const defaults = {
+            preHook: () => {StreamingService.writeHead(outStream, 200)},
+            errorHook: () => {StreamingService.writeHead(outStream, 500)},
+            errorHandler: (error) => {
+                const {stack, message} = error;
+                console.error({error: Object.assign({}, error, {stack, message})});
+            }
+        };
+        return Object.assign(defaults, overrides);
+    };
+
     static writeHead = (res, status=200) => {
         if (typeof res.headersSent === 'boolean' && !res.headersSent) {
             res.writeHead(status, {
@@ -33,37 +45,23 @@ class StreamingService {
         });
     };
 
-    static streamData = (outStream, data) => {
+    static streamData = (outStream, data, options={}) => {
         if (!data) return outStream.end();
         const inStream = new Readable({objectMode: true, read: ()=>{}});
-        StreamingService.streamResponse(outStream, inStream, data);
+        StreamingService.streamResponse(outStream, inStream, options, data);
     };
 
-    static streamResponse = (outStream, inStream, data=undefined, options={}) => {
-        const defaultOptions = {
-            preHook: ()=>{StreamingService.writeHead(outStream, 200)},
-            errorHook: ()=>{StreamingService.writeHead(outStream, 500)},
-            errorHandler: (error)=>{
-                const {stack, message} = error;
-                console.error({error: Object.assign({}, error, {stack, message})});
-            }
-        };
-        const {preHook, errorHook, errorHandler} = Object.assign(defaultOptions, options);
-        const cleanup = () => { if (!inStream.destroyed) inStream.destroy(); };
-        outStream.on('close', cleanup);
-        outStream.on('destroy', cleanup);
-        outStream.on('error', cleanup);
+    static streamResponse = (outStream, inStream, options={}, data=undefined) => {
+        const {preHook, errorHook, errorHandler} = StreamingService.getOptions(outStream, options);
         inStream.on('error', (error) => {
             errorHook();
-            errorHandler(error);
-            const {message} = error;
-            inStream.push({error: message});
+            inStream.push({error: error.message});
             outStream.end();
         });
-        inStream.pipe(this.getTransform(preHook)).pipe(outStream);
+        const transform = StreamingService.getTransform(preHook);
+        pipeline(inStream, transform, outStream, errorHandler);
         if (data) {
-            data = Array.isArray(data) ? data : [data];
-            data.map(record => inStream.push(record));
+            (Array.isArray(data) ? data : [data]).map(record => inStream.push(record));
             inStream.push(null); // signal stream end
         }
     };

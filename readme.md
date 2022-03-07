@@ -59,3 +59,4 @@ curl -s -X GET "http://localhost:3000/full-stream/1000000?batchSize=10000&highWa
 * <https://www.npmjs.com/package/pg-query-stream>
 * <https://thenewstack.io/node-js-readable-streams-explained/>
 * <https://blog.logrocket.com/working-node-js-streams/>
+* <https://www.youtube.com/watch?v=aTEDCotcn20>
