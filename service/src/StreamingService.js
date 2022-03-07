@@ -1,6 +1,16 @@
-const { Transform, Readable } = require('stream');
+const { Transform, Readable, pipeline } = require('stream');
 
 class StreamingService {
+    static writeHead = (res, status=200) => {
+        if (typeof res.headersSent === 'boolean' && !res.headersSent) {
+            res.writeHead(status, {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Transfer-Encoding': 'chunked',
+                'X-Content-Type-Options': 'nosniff'
+            });
+        }
+    };
+
     static getTransform = (preHook) => {
         return new Transform({
             writableObjectMode: true,
@@ -30,15 +40,24 @@ class StreamingService {
     };
 
     static streamResponse = (outStream, inStream, data=undefined, options={}) => {
-        const {preHook, errorHook} = Object.assign({preHook:()=>{}, errorHook:()=>{}}, options);
+        const defaultOptions = {
+            preHook: ()=>{StreamingService.writeHead(outStream, 200)},
+            errorHook: ()=>{StreamingService.writeHead(outStream, 500)},
+            errorHandler: (error)=>{
+                const {stack, message} = error;
+                console.error({error: Object.assign({}, error, {stack, message})});
+            }
+        };
+        const {preHook, errorHook, errorHandler} = Object.assign(defaultOptions, options);
         const cleanup = () => { if (!inStream.destroyed) inStream.destroy(); };
         outStream.on('close', cleanup);
         outStream.on('destroy', cleanup);
         outStream.on('error', cleanup);
         inStream.on('error', (error) => {
             errorHook();
-            const {stack, message} = error;
-            inStream.push({error: Object.assign({}, error, {stack, message})});
+            errorHandler(error);
+            const {message} = error;
+            inStream.push({error: message});
             outStream.end();
         });
         inStream.pipe(this.getTransform(preHook)).pipe(outStream);

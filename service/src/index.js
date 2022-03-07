@@ -81,10 +81,12 @@ app.get('/full-stream/:n', async (req, res) => {
     const highWaterMark = Number(req.query.highWaterMark || 10000);    
     try {
         const dbStream = await db.streamSeries(n, batchSize, highWaterMark);
-        StreamingService.streamResponse(res, dbStream, null, {
-            preHook: () => writeStreamingHeaders(res, 200),
-            errorHook: () => writeStreamingHeaders(res, 500)
-        });
+        StreamingService.streamResponse(res, dbStream);
+        // Example Options Override:
+        // StreamingService.streamResponse(res, dbStream, null, {
+        //     preHook: () => writeStreamingHeaders(res, 200),
+        //     errorHook: () => writeStreamingHeaders(res, 500)
+        // });
     } catch (error) {
         const {stack, message} = error;
         res.status(500).send({error: Object.assign({}, error, {stack, message})});
