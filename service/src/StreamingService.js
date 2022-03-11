@@ -6,6 +6,7 @@ class StreamingService {
             preHook: () => {StreamingService.writeHead(outStream, 200)},
             errorHook: () => {StreamingService.writeHead(outStream, 500)},
             errorHandler: (error) => {
+                if (!error) return;
                 const {stack, message} = error;
                 console.error({error: Object.assign({}, error, {stack, message})});
             }
